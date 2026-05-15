@@ -24,8 +24,9 @@ class GlobalHotKey {
         // Command 键 + Shift 键的 Carbon 修饰符组合
         let modifiers = UInt32(cmdKey | shiftKey)
         
-        let signature = UTGetOSTypeFromString("CLPY" as CFString)
-        var hotKeyID = EventHotKeyID(signature: signature, id: 1)
+        // 0x434C5059 即 "CLPY" 的 ASCII 码组成，用来替代已废弃的 UTGetOSTypeFromString
+        let signature = OSType(0x434C5059)
+        let hotKeyID = EventHotKeyID(signature: signature, id: 1)
         
         // 注册热键
         RegisterEventHotKey(keyCode, modifiers, hotKeyID, GetApplicationEventTarget(), 0, &hotKeyRef)

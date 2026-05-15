@@ -12,9 +12,24 @@ struct ClipboardMenuView: View {
             // 限制最多显示 10 条，避免菜单过长
             ForEach(items.prefix(10)) { item in
                 Button(action: {
-                    paste(text: item.content)
+                    paste(item: item)
                 }) {
-                    Text(getSingleLinePreview(for: item.content))
+                    if item.itemType == "text", let text = item.textContent {
+                        HStack {
+                            Image(systemName: "text.rectangle.fill")
+                            Text(getSingleLinePreview(for: text))
+                                .lineLimit(1)
+                        }
+                    } else if item.itemType == "image", let imgData = item.imageData, NSImage(data: imgData) != nil {
+                        HStack {
+                            Image(systemName: "photo")
+                            Text("图片 [\(imgData.count / 1024) KB]")
+                            // 如果需要在菜单里直接看缩略图，可以取消下面的注释，但悬浮菜单上可能需要额外调整高度和布局
+                            // Image(nsImage: nsImage).resizable().aspectRatio(contentMode: .fit).frame(width: 40, height: 30)
+                        }
+                    } else {
+                        Text("未知类型内容")
+                    }
                 }
             }
             
@@ -36,11 +51,21 @@ struct ClipboardMenuView: View {
     }
     
     // 写入剪贴板并且自动粘贴
-    private func paste(text: String) {
-        // 1. 将选中的文本放回剪贴板首位
+    private func paste(item: ClipItem) {
+        // 1. 将选中的内容放回剪贴板首位
         let pasteboard = NSPasteboard.general
         pasteboard.clearContents()
-        pasteboard.setString(text, forType: .string)
+        
+        // 添加一个自定义标记，让 ClipboardMonitor 识别并忽略自己写回的剪贴板内容
+        let ignoreType = NSPasteboard.PasteboardType("com.qingyuanclipy.ignore")
+        pasteboard.setData(Data(), forType: ignoreType)
+        
+        if item.itemType == "text", let text = item.textContent {
+            pasteboard.setString(text, forType: .string)
+        } else if item.itemType == "image", let imgData = item.imageData {
+            // macOS 常用剪贴板图片格式为 TIFF 或 PNG
+            pasteboard.setData(imgData, forType: .tiff)
+        }
         
         // 2. 隐藏当前的剪贴板弹窗，让系统焦点回到之前的目标应用程序
         PopupManager.shared.hidePopup()

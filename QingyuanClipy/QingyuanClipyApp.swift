@@ -44,10 +44,10 @@ struct QingyuanClipyApp: App {
     }
 
     private func setupClipboardMonitor() {
-        monitor.onNewCopy = { newText in
+        monitor.onNewCopy = { itemType, text, imgData in
             // 当发生复制时，开启一个 Task 保存到数据库
             Task { @MainActor in
-                let newItem = ClipItem(content: newText)
+                let newItem = ClipItem(itemType: itemType, textContent: text, imageData: imgData)
                 sharedModelContainer.mainContext.insert(newItem)
                 try? sharedModelContainer.mainContext.save()
             }
