@@ -30,8 +30,19 @@ struct QingyuanClipyApp: App {
     init() {
         // 在应用启动时设置剪贴板监听逻辑
         setupClipboardMonitor()
+        
+        // 注册全局热键 Cmd + Shift + V
+        setupGlobalHotKey()
     }
     
+    private func setupGlobalHotKey() {
+        GlobalHotKey.shared.action = { [self] in
+            // 按下热键时，在当前鼠标位置弹出剪贴板浮窗
+            PopupManager.shared.showPopup(with: sharedModelContainer)
+        }
+        GlobalHotKey.shared.registerCmdShiftV()
+    }
+
     private func setupClipboardMonitor() {
         monitor.onNewCopy = { newText in
             // 当发生复制时，开启一个 Task 保存到数据库
