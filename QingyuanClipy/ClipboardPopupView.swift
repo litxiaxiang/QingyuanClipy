@@ -11,23 +11,39 @@ struct ClipboardPopupView: View {
     
     @State private var hoveredItemID: PersistentIdentifier?
     @State private var showAllItems: Bool = false
+    @State private var searchText: String = ""
+    @FocusState private var isSearchFocused: Bool
     
     var body: some View {
         VStack(spacing: 0) {
-            // 顶部搜索/标题栏区域 (Raycast 风格)
-            HStack(spacing: 12) {
+            // 顶部搜索/标题栏区域 (Raycast 风格，紧凑版)
+            HStack(spacing: 8) {
                 Image(systemName: "magnifyingglass")
-                    .font(.system(size: 18, weight: .medium))
+                    .font(.system(size: 14, weight: .medium))
                     .foregroundColor(.secondary)
                 
-                Text("剪贴板历史")
-                    .font(.system(size: 18, weight: .regular))
-                    .foregroundColor(.secondary)
+                TextField("搜索剪贴板历史...", text: $searchText)
+                    .textFieldStyle(PlainTextFieldStyle())
+                    .font(.system(size: 14, weight: .regular))
+                    .foregroundColor(.primary)
+                    .focused($isSearchFocused)
+                
+                if !searchText.isEmpty {
+                    Button(action: {
+                        searchText = ""
+                        isSearchFocused = true
+                    }) {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.system(size: 12))
+                            .foregroundColor(.secondary)
+                    }
+                    .buttonStyle(PlainButtonStyle())
+                }
                 
                 Spacer()
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 16)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 10)
             
             Rectangle()
                 .fill(Color.primary.opacity(0.1))
@@ -42,23 +58,38 @@ struct ClipboardPopupView: View {
             } else {
                 ScrollView {
                     LazyVStack(spacing: 2) {
-                        let displayItems = showAllItems ? Array(items) : Array(items.prefix(5))
-                        
-                        ForEach(displayItems) { item in
-                            popupItemCard(for: item)
-                                .onHover { isHovered in
-                                    if isHovered {
-                                        hoveredItemID = item.id
-                                    } else if hoveredItemID == item.id {
-                                        hoveredItemID = nil
-                                    }
-                                }
-                                .onTapGesture {
-                                    onSelect?(item)
-                                }
+                        let filteredItems = searchText.isEmpty ? items : items.filter { item in
+                            if item.itemType == "text", let text = item.textContent {
+                                return text.localizedCaseInsensitiveContains(searchText)
+                            }
+                            return false
                         }
                         
-                        if !showAllItems && items.count > 5 {
+                        // 搜索时自动展示所有过滤结果
+                        let displayItems = (showAllItems || !searchText.isEmpty) ? Array(filteredItems) : Array(filteredItems.prefix(5))
+                        
+                        if displayItems.isEmpty {
+                            Text("无匹配结果")
+                                .foregroundColor(.secondary)
+                                .font(.system(size: 14))
+                                .padding(.vertical, 20)
+                        } else {
+                            ForEach(displayItems) { item in
+                                popupItemCard(for: item)
+                                    .onHover { isHovered in
+                                        if isHovered {
+                                            hoveredItemID = item.id
+                                        } else if hoveredItemID == item.id {
+                                            hoveredItemID = nil
+                                        }
+                                    }
+                                    .onTapGesture {
+                                        onSelect?(item)
+                                    }
+                            }
+                        }
+                        
+                        if !showAllItems && searchText.isEmpty && items.count > 5 {
                             HStack {
                                 Spacer()
                                 Text("更多...")
@@ -110,7 +141,14 @@ struct ClipboardPopupView: View {
             .padding(.vertical, 10)
             .background(Color.black.opacity(0.03))
         }
-        .background(VisualEffectView().ignoresSafeArea())
+        .background(
+            ZStack {
+                VisualEffectView().ignoresSafeArea()
+                // 在磨砂玻璃之上叠加一层半透明的系统窗口背景色，
+                // 大幅提亮弹窗本体，防止被背后深色的窗口带暗
+                Color(nsColor: .windowBackgroundColor).opacity(0.75)
+            }
+        )
         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 16, style: .continuous)
@@ -118,6 +156,8 @@ struct ClipboardPopupView: View {
         )
         .onAppear {
             showAllItems = false
+            searchText = ""
+            isSearchFocused = true
         }
     }
     
@@ -129,7 +169,7 @@ struct ClipboardPopupView: View {
         HStack(spacing: 8) {
             // Icon 区域 (紧凑型)
             if item.itemType == "text" {
-                Image(systemName: "text.alignleft")
+                Image(systemName: "text.rectangle.fill")
                     .font(.system(size: 13, weight: .regular))
                     .foregroundColor(isHovered ? .primary : .secondary)
                     .frame(width: 16)
@@ -206,7 +246,7 @@ struct VisualEffectView: NSViewRepresentable {
         let view = NSVisualEffectView()
         view.blendingMode = .behindWindow // 允许透视背景窗口
         view.state = .active
-        view.material = .popover // Popover 材质最接近 Spotlight 和 Raycast
+        view.material = .menu // 改为 menu 材质，比 popover 更加明亮通透
         return view
     }
     

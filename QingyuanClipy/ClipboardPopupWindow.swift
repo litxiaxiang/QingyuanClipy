@@ -7,7 +7,7 @@ class ClipboardPopupWindow: NSPanel {
     var onHide: (() -> Void)?
     
     init(rootView: some View) {
-        let contentRect = NSRect(x: 0, y: 0, width: 320, height: 280)
+        let contentRect = NSRect(x: 0, y: 0, width: 320, height: 250)
         
         super.init(
             contentRect: contentRect,

@@ -22,7 +22,7 @@ class PopupManager {
             }
             
             let wrappedView = rootView
-                .frame(width: 320, height: 280) // 适应最近 5 条的合适高度
+                .frame(width: 320, height: 250) // 适应最近 5 条的合适高度
                 .modelContainer(container)
             
             window = ClipboardPopupWindow(rootView: wrappedView)
@@ -44,7 +44,7 @@ class PopupManager {
                 
                 // 明确指定窗口尺寸，避免 SwiftUI 尚未渲染布局导致 frame 尺寸获取不准
                 let expectedWidth: CGFloat = 320
-                let expectedHeight: CGFloat = 280
+                let expectedHeight: CGFloat = 250
                 
                 // 强制更新成目标尺寸
                 win.setContentSize(NSSize(width: expectedWidth, height: expectedHeight))
