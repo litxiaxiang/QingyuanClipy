@@ -59,6 +59,7 @@ struct ClipboardMenuView: View {
                 Text("未知类型内容")
             }
         }
+        .help(item.itemType == "text" ? (item.textContent ?? "") : "图片组件")
     }
     
     // 提取文本预览，避免换行撑坏菜单

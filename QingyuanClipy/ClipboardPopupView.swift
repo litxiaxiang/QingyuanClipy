@@ -86,6 +86,7 @@ struct ClipboardPopupView: View {
                                     .onTapGesture {
                                         onSelect?(item)
                                     }
+                                    .help(item.itemType == "text" ? (item.textContent ?? "") : "图片组件")
                             }
                         }
                         
@@ -187,21 +188,38 @@ struct ClipboardPopupView: View {
             
             // 文本信息区域 - 移除时间，单行显示
             if item.itemType == "text", let text = item.textContent {
-                Text(getSingleLinePreview(for: text))
-                    .font(.system(size: 13, weight: .regular))
-                    .foregroundColor(.primary)
-                    .lineLimit(1)
+                Color.clear
+                    .overlay(
+                        Text(getSingleLinePreview(for: text))
+                            .font(.system(size: 13, weight: .regular))
+                            .foregroundColor(.primary)
+                            .lineLimit(1)
+                            .fixedSize(horizontal: true, vertical: false), // 展开完全不产生原生...截断
+                        alignment: .leading
+                    )
+                    .clipped() // 切掉超出可用宽度的文字
+                    .mask(
+                        // 结尾做渐隐遮罩
+                        LinearGradient(
+                            stops: [
+                                .init(color: .black, location: 0.9),
+                                .init(color: .clear, location: 1.0)
+                            ],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
             } else if item.itemType == "image", let imgData = item.imageData {
                 Text("图片 [\(imgData.count / 1024) KB]")
                     .font(.system(size: 13, weight: .regular))
                     .foregroundColor(.primary)
+                Spacer(minLength: 0)
             } else {
                 Text("未知内容")
                     .font(.system(size: 13, weight: .regular))
                     .foregroundColor(.primary)
+                Spacer(minLength: 0)
             }
-            
-            Spacer(minLength: 0)
             
             // 图像预览缩略图 (缩小)
             if item.itemType == "image", let imgData = item.imageData, let nsImage = NSImage(data: imgData) {
@@ -210,13 +228,6 @@ struct ClipboardPopupView: View {
                     .aspectRatio(contentMode: .fill)
                     .frame(width: 20, height: 20)
                     .clipShape(RoundedRectangle(cornerRadius: 3))
-            }
-            
-            // 悬停提示 (极简回车符)
-            if isHovered {
-                Image(systemName: "return")
-                    .font(.system(size: 10, weight: .bold))
-                    .foregroundColor(.secondary)
             }
         }
         .padding(.horizontal, 8)
@@ -228,9 +239,10 @@ struct ClipboardPopupView: View {
     
     private func getSingleLinePreview(for text: String) -> String {
         let lines = text.split(whereSeparator: \.isNewline)
-        guard let firstLine = lines.first else { return "..." }
-        let limit = 40
-        return firstLine.count > limit ? firstLine.prefix(limit) + "..." : String(firstLine)
+        guard let firstLine = lines.first else { return "无内容" }
+        // 适当限制长度保证渲染性能，但不再人为拼接 "..."
+        let limit = 150
+        return firstLine.count > limit ? String(firstLine.prefix(limit)) : String(firstLine)
     }
     
     private func clearAll() {
