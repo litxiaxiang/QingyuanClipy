@@ -41,29 +41,41 @@ class PopupManager {
             
             if let screen = screen {
                 let screenVisibleFrame = screen.visibleFrame
-                let windowWidth = win.frame.width
-                let windowHeight = win.frame.height
                 
+                // 明确指定窗口尺寸，避免 SwiftUI 尚未渲染布局导致 frame 尺寸获取不准
+                let expectedWidth: CGFloat = 320
+                let expectedHeight: CGFloat = 280
+                
+                // 强制更新成目标尺寸
+                win.setContentSize(NSSize(width: expectedWidth, height: expectedHeight))
+                
+                // 计算窗口左下角坐标 (macOS 坐标原点在左下角)
                 // 默认将窗口弹出的位置设置在鼠标右下方
-                var topLeftX = mouseLocation.x + 2
-                var topLeftY = mouseLocation.y - 2
+                var originX = mouseLocation.x + 5
+                var originY = mouseLocation.y - expectedHeight - 5
                 
-                // 边界碰撞检测与修正 (macOS 坐标系原点在左下角)
-                // 1. 如果右侧超出屏幕可视边缘
-                if topLeftX + windowWidth > screenVisibleFrame.maxX {
-                    topLeftX = screenVisibleFrame.maxX - windowWidth - 5
+                // 边界碰撞检测与修正
+                // 1. 如果右侧超出屏幕边缘，将窗口左移
+                if originX + expectedWidth > screenVisibleFrame.maxX {
+                    originX = mouseLocation.x - expectedWidth - 5
                 }
                 
-                // 2. 如果底部超出屏幕可视边缘 (注意 topLeftY - windowHeight 就是底部的高度)
-                if topLeftY - windowHeight < screenVisibleFrame.minY {
-                    topLeftY = screenVisibleFrame.minY + windowHeight + 5
+                // 2. 如果底部超出屏幕边缘，将窗口上移
+                if originY < screenVisibleFrame.minY {
+                    originY = screenVisibleFrame.minY + 5
                 }
                 
-                // 3. 兜底保护，确保不超过左边和上边
-                topLeftX = max(topLeftX, screenVisibleFrame.minX + 5)
-                topLeftY = min(topLeftY, screenVisibleFrame.maxY - 5)
+                // 3. 如果顶部超出屏幕边缘（由于我们是默认在鼠标下方弹出，此情况较罕见，但兜底保护）
+                if originY + expectedHeight > screenVisibleFrame.maxY {
+                    originY = screenVisibleFrame.maxY - expectedHeight - 5
+                }
                 
-                win.setFrameTopLeftPoint(NSPoint(x: topLeftX, y: topLeftY))
+                // 4. 左侧兜底保护
+                if originX < screenVisibleFrame.minX {
+                    originX = screenVisibleFrame.minX + 5
+                }
+                
+                win.setFrameOrigin(NSPoint(x: originX, y: originY))
             } else {
                 // 如果找不到屏幕，作为兜底居中
                 win.center()
