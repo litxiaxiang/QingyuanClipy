@@ -66,8 +66,28 @@ struct ClipboardMenuView: View {
     private func getSingleLinePreview(for text: String) -> String {
         let lines = text.split(whereSeparator: \.isNewline)
         guard let firstLine = lines.first else { return "..." }
-        let limit = 40
-        return firstLine.count > limit ? firstLine.prefix(limit) + "..." : String(firstLine)
+        
+        let scoreLimit = 40
+        var currentScore = 0
+        var result = ""
+        
+        for char in firstLine {
+            // 判断是否是中文汉字、中文标点或全角字符
+            let isChinese = char.unicodeScalars.contains { scalar in
+                (0x4E00...0x9FFF).contains(scalar.value) || // 基本汉字区
+                (0x3000...0x303F).contains(scalar.value) || // CJK 符号和标点
+                (0xFF00...0xFFEF).contains(scalar.value)    // 半角及全角字符形式
+            }
+            
+            currentScore += isChinese ? 3 : 1
+            
+            if currentScore > scoreLimit {
+                return result + "..."
+            }
+            result.append(char)
+        }
+        
+        return result
     }
     
     // 写入剪贴板并且自动粘贴
