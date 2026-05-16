@@ -5,35 +5,26 @@ import AppKit
 class PopupManager {
     static let shared = PopupManager()
     
-    private var window: NSPanel?
+    private var window: ClipboardPopupWindow?
     
     func showPopup(with container: ModelContainer) {
         if window == nil {
-            // 我们复用之前写的菜单视图，并注入数据库环境
-            let rootView = ClipboardMenuView()
-                .padding()
-                .frame(width: 300) // 设定弹出面板宽度
+            var rootView = ClipboardPopupView()
+            
+            // 将原先写死在 Menu 里的“选中->粘贴”逻辑转移到控制层
+            rootView.onSelect = { [weak self] item in
+                self?.handleSelection(for: item)
+            }
+            
+            let wrappedView = rootView
+                .frame(width: 300, height: 400) // 根据滚动列表给定尺寸
                 .modelContainer(container)
             
-            let host = NSHostingController(rootView: rootView)
-            
-            // 创建一个无边框的浮动面板
-            window = NSPanel(
-                contentRect: NSRect(x: 0, y: 0, width: 300, height: 400),
-                styleMask: [.nonactivatingPanel, .fullSizeContentView, .borderless],
-                backing: .buffered,
-                defer: false
-            )
-            
-            window?.isFloatingPanel = true
-            window?.level = .popUpMenu // 显示在所有应用最顶层
-            window?.backgroundColor = NSColor.windowBackgroundColor.withAlphaComponent(0.95)
-            window?.isOpaque = false
-            window?.hasShadow = true
-            window?.contentViewController = host
-            
-            // 当点击面板外部或者失去焦点时，自动关闭该窗口
-            window?.hidesOnDeactivate = true
+            window = ClipboardPopupWindow(rootView: wrappedView)
+            window?.onHide = { 
+                // 可以在这里处理清理状态
+                // 比如 window = nil (如需每次重新创建)
+            }
         }
         
         // 获取当前鼠标指针的位置
@@ -51,6 +42,44 @@ class PopupManager {
     }
     
     func hidePopup() {
-        window?.orderOut(nil)
+        window?.closePanel()
+    }
+    
+    // MARK: - 粘贴操作控制
+    
+    private func handleSelection(for item: ClipItem) {
+        // 1. 将选中的内容放回剪贴板首位
+        let pasteboard = NSPasteboard.general
+        pasteboard.clearContents()
+        
+        let ignoreType = NSPasteboard.PasteboardType("com.qingyuanclipy.ignore")
+        pasteboard.setData(Data(), forType: ignoreType)
+        
+        if item.itemType == "text", let text = item.textContent {
+            pasteboard.setString(text, forType: .string)
+        } else if item.itemType == "image", let imgData = item.imageData {
+            pasteboard.setData(imgData, forType: .tiff)
+        }
+        
+        // 2. 隐藏弹窗，归还系统焦点
+        hidePopup()
+        NSApp.hide(nil)
+        
+        // 3. 延时发送 Cmd+V
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            self.triggerCmdV()
+        }
+    }
+    
+    private func triggerCmdV() {
+        let vKeyCode: CGKeyCode = 0x09
+        
+        guard let keyDownEvent = CGEvent(keyboardEventSource: nil, virtualKey: vKeyCode, keyDown: true) else { return }
+        keyDownEvent.flags = .maskCommand
+        keyDownEvent.post(tap: .cghidEventTap)
+        
+        guard let keyUpEvent = CGEvent(keyboardEventSource: nil, virtualKey: vKeyCode, keyDown: false) else { return }
+        keyUpEvent.flags = .maskCommand
+        keyUpEvent.post(tap: .cghidEventTap)
     }
 }

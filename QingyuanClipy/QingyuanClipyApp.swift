@@ -31,7 +31,7 @@ struct QingyuanClipyApp: App {
         // 在应用启动时设置剪贴板监听逻辑
         setupClipboardMonitor()
         
-        // 注册全局热键 Cmd + Shift + V
+        // 注册全局热键 Option + V
         setupGlobalHotKey()
     }
     
@@ -44,7 +44,7 @@ struct QingyuanClipyApp: App {
         // 读取快捷键开关设置，默认开启
         let isEnabled = UserDefaults.standard.object(forKey: "isHotKeyEnabled") as? Bool ?? true
         if isEnabled {
-            GlobalHotKey.shared.registerCmdShiftV()
+            GlobalHotKey.shared.registerOptionV()
         }
     }
 

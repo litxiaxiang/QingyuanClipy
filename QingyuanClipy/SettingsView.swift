@@ -158,7 +158,7 @@ struct ShortcutSettingsView: View {
                             .toggleStyle(.checkbox)
                             .onChange(of: isHotKeyEnabled) { _, newValue in
                                 if newValue {
-                                    GlobalHotKey.shared.registerCmdShiftV()
+                                    GlobalHotKey.shared.registerOptionV()
                                 } else {
                                     GlobalHotKey.shared.unregister()
                                 }
@@ -167,9 +167,7 @@ struct ShortcutSettingsView: View {
                         if isHotKeyEnabled {
                             HStack(spacing: 6) {
                                 HStack(spacing: 4) {
-                                    shortcutKeyView("⌘")
-                                    Text("+").foregroundColor(.secondary)
-                                    shortcutKeyView("⇧")
+                                    shortcutKeyView("⌥")
                                     Text("+").foregroundColor(.secondary)
                                     shortcutKeyView("V")
                                 }

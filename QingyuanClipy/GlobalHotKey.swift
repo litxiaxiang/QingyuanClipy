@@ -8,7 +8,7 @@ class GlobalHotKey {
     private var hotKeyRef: EventHotKeyRef?
     private var isHandlerInstalled = false
 
-    func registerCmdShiftV() {
+    func registerOptionV() {
         if hotKeyRef != nil { return } // 已经注册过了
 
         // 只安装一次事件处理回调
@@ -27,8 +27,8 @@ class GlobalHotKey {
         
         // 0x09 对应的 keyCode 是按键 'V'
         let keyCode = UInt32(0x09)
-        // Command 键 + Shift 键的 Carbon 修饰符组合
-        let modifiers = UInt32(cmdKey | shiftKey)
+        // Option 键的 Carbon 修饰符组合
+        let modifiers = UInt32(optionKey)
         
         // 0x434C5059 即 "CLPY" 的 ASCII 码组成，用来替代已废弃的 UTGetOSTypeFromString
         let signature = OSType(0x434C5059)
