@@ -63,7 +63,7 @@ struct QingyuanClipyApp: App {
                 .modelContainer(sharedModelContainer) // 需要给视图内部提供 Context
             
             Divider()
-            Button("退出") {
+            Button("退出 青元剪切板") {
                 NSApplication.shared.terminate(nil)
             }
         }

@@ -16,7 +16,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "4BB1DFE02FB6A19E00D60B00"
-               BuildableName = "QingyuanClipy.app"
+               BuildableName = "&#x9752;&#x5143;&#x526a;&#x5207;&#x677f;.app"
                BlueprintName = "QingyuanClipy"
                ReferencedContainer = "container:QingyuanClipy.xcodeproj">
             </BuildableReference>
@@ -46,7 +46,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "4BB1DFE02FB6A19E00D60B00"
-            BuildableName = "QingyuanClipy.app"
+            BuildableName = "&#x9752;&#x5143;&#x526a;&#x5207;&#x677f;.app"
             BlueprintName = "QingyuanClipy"
             ReferencedContainer = "container:QingyuanClipy.xcodeproj">
          </BuildableReference>
@@ -63,7 +63,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "4BB1DFE02FB6A19E00D60B00"
-            BuildableName = "QingyuanClipy.app"
+            BuildableName = "&#x9752;&#x5143;&#x526a;&#x5207;&#x677f;.app"
             BlueprintName = "QingyuanClipy"
             ReferencedContainer = "container:QingyuanClipy.xcodeproj">
          </BuildableReference>

@@ -9,27 +9,20 @@ struct ClipboardMenuView: View {
         if items.isEmpty {
             Text("剪贴板为空")
         } else {
-            // 限制最多显示 10 条，避免菜单过长
+            // 前 10 条显示在一级菜单
             ForEach(items.prefix(10)) { item in
-                Button(action: {
-                    paste(item: item)
-                }) {
-                    if item.itemType == "text", let text = item.textContent {
-                        HStack {
-                            Image(systemName: "text.rectangle.fill")
-                            Text(getSingleLinePreview(for: text))
-                                .lineLimit(1)
-                        }
-                    } else if item.itemType == "image", let imgData = item.imageData, NSImage(data: imgData) != nil {
-                        HStack {
-                            Image(systemName: "photo")
-                            Text("图片 [\(imgData.count / 1024) KB]")
-                            // 如果需要在菜单里直接看缩略图，可以取消下面的注释，但悬浮菜单上可能需要额外调整高度和布局
-                            // Image(nsImage: nsImage).resizable().aspectRatio(contentMode: .fit).frame(width: 40, height: 30)
-                        }
-                    } else {
-                        Text("未知类型内容")
+                menuItem(for: item)
+            }
+            
+            // 第 11 条开始放在二级菜单里
+            if items.count > 10 {
+                Menu {
+                    // 二级菜单再展示最多 40 条旧记录
+                    ForEach(items.dropFirst(10).prefix(40)) { item in
+                        menuItem(for: item)
                     }
+                } label: {
+                    Label("更多历史记录...", systemImage: "clock.fill")
                 }
             }
             
@@ -38,6 +31,30 @@ struct ClipboardMenuView: View {
                 Button("清空历史记录") {
                     clearAll()
                 }
+            }
+        }
+    }
+    
+    // 提取出来的复用视图，避免重复
+    @ViewBuilder
+    private func menuItem(for item: ClipItem) -> some View {
+        Button(action: {
+            paste(item: item)
+        }) {
+            if item.itemType == "text", let text = item.textContent {
+                HStack {
+                    Image(systemName: "text.rectangle.fill")
+                    Text(getSingleLinePreview(for: text))
+                        .lineLimit(1)
+                }
+            } else if item.itemType == "image", let imgData = item.imageData, NSImage(data: imgData) != nil {
+                HStack {
+                    Image(systemName: "photo")
+                    Text("图片 [\(imgData.count / 1024) KB]")
+                    // Image(nsImage: nsImage).resizable().aspectRatio(contentMode: .fit).frame(width: 40, height: 30) // 如果需要缩略图可恢复
+                }
+            } else {
+                Text("未知类型内容")
             }
         }
     }
