@@ -44,7 +44,7 @@ struct QingyuanClipyApp: App {
         // 读取快捷键开关设置，默认开启
         let isEnabled = UserDefaults.standard.object(forKey: "isHotKeyEnabled") as? Bool ?? true
         if isEnabled {
-            GlobalHotKey.shared.registerOptionV()
+            GlobalHotKey.shared.register()
         }
     }
 

@@ -145,6 +145,10 @@ struct GeneralSettingsView: View {
 struct ShortcutSettingsView: View {
     @Binding var isHotKeyEnabled: Bool
     
+    @State private var isRecording = false
+    @State private var currentKeyCode: UInt16 = GlobalHotKey.shared.currentKeyCode
+    @State private var currentModifiers: NSEvent.ModifierFlags = GlobalHotKey.shared.currentModifiers
+    
     var body: some View {
         Form {
             VStack(alignment: .leading, spacing: 24) {
@@ -158,27 +162,63 @@ struct ShortcutSettingsView: View {
                             .toggleStyle(.checkbox)
                             .onChange(of: isHotKeyEnabled) { _, newValue in
                                 if newValue {
-                                    GlobalHotKey.shared.registerOptionV()
+                                    GlobalHotKey.shared.register()
                                 } else {
                                     GlobalHotKey.shared.unregister()
                                 }
                             }
                         
                         if isHotKeyEnabled {
-                            HStack(spacing: 6) {
-                                HStack(spacing: 4) {
-                                    shortcutKeyView("⌥")
-                                    Text("+").foregroundColor(.secondary)
-                                    shortcutKeyView("V")
+                            Button(action: {
+                                isRecording.toggle()
+                            }) {
+                                HStack(spacing: 6) {
+                                    if isRecording {
+                                        Text("请按快捷键...")
+                                            .foregroundColor(.secondary)
+                                    } else {
+                                        ShortcutDisplayView(modifiers: currentModifiers, keyCode: currentKeyCode)
+                                    }
                                 }
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 4)
+                                .frame(minWidth: 120, minHeight: 28)
+                                .background(isRecording ? Color.accentColor.opacity(0.1) : Color(NSColor.textBackgroundColor))
+                                .cornerRadius(6)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 6)
+                                        .stroke(isRecording ? Color.accentColor : Color.primary.opacity(0.1), lineWidth: 1)
+                                )
                             }
-                            .padding(.top, 4)
+                            .buttonStyle(PlainButtonStyle())
+                            .background(ShortcutRecorder(isRecording: $isRecording, keyCode: $currentKeyCode, modifiers: $currentModifiers))
                         }
                     }
                 }
             }
             .padding(.top, 20)
             .padding(.horizontal, 10)
+        }
+    }
+}
+
+// 快捷键展示视图
+struct ShortcutDisplayView: View {
+    let modifiers: NSEvent.ModifierFlags
+    let keyCode: UInt16
+    
+    var body: some View {
+        HStack(spacing: 4) {
+            if modifiers.contains(.control) { shortcutKeyView("⌃")
+                Text("+").foregroundColor(.secondary) }
+            if modifiers.contains(.option) { shortcutKeyView("⌥")
+                Text("+").foregroundColor(.secondary) }
+            if modifiers.contains(.shift) { shortcutKeyView("⇧")
+                Text("+").foregroundColor(.secondary) }
+            if modifiers.contains(.command) { shortcutKeyView("⌘")
+                Text("+").foregroundColor(.secondary) }
+            
+            shortcutKeyView(keyString(for: keyCode))
         }
     }
     
@@ -196,6 +236,54 @@ struct ShortcutSettingsView: View {
             )
             .shadow(color: Color.black.opacity(0.05), radius: 1, y: 1)
     }
+    
+    // 简单的 keycode 转 string
+    private func keyString(for keyCode: UInt16) -> String {
+        let keyMap: [UInt16: String] = [
+            0: "A", 1: "S", 2: "D", 3: "F", 4: "H", 5: "G", 6: "Z", 7: "X", 8: "C", 9: "V",
+            11: "B", 12: "Q", 13: "W", 14: "E", 15: "R", 16: "Y", 17: "T", 18: "1", 19: "2",
+            20: "3", 21: "4", 22: "6", 23: "5", 24: "=", 25: "9", 26: "7", 27: "-", 28: "8",
+            29: "0", 30: "]", 31: "O", 32: "U", 33: "[", 34: "I", 35: "P", 36: "Enter",
+            37: "L", 38: "J", 39: "'", 40: "K", 41: ";", 42: "\\", 43: ",", 44: "/", 45: "N",
+            46: "M", 47: ".", 49: "Space", 50: "`", 51: "Delete", 53: "Esc"
+        ]
+        return keyMap[keyCode] ?? "?"
+    }
+}
+
+// 隐藏的用来捕获按键的视图
+struct ShortcutRecorder: NSViewRepresentable {
+    @Binding var isRecording: Bool
+    @Binding var keyCode: UInt16
+    @Binding var modifiers: NSEvent.ModifierFlags
+    
+    func makeNSView(context: Context) -> NSView {
+        let view = NSView()
+        
+        NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
+            if self.isRecording {
+                let flags = event.modifierFlags.intersection([.command, .option, .control, .shift])
+                if !flags.isEmpty {
+                    DispatchQueue.main.async {
+                        self.keyCode = event.keyCode
+                        self.modifiers = flags
+                        GlobalHotKey.shared.saveHotKey(keyCode: event.keyCode, modifiers: flags)
+                        self.isRecording = false
+                    }
+                } else if event.keyCode == 53 { // ESC 键取消
+                    DispatchQueue.main.async {
+                        self.isRecording = false
+                    }
+                }
+                return nil // 拦截事件以便录制
+            }
+            return event
+        }
+        
+        return view
+    }
+    
+    func updateNSView(_ nsView: NSView, context: Context) {}
 }
 
 struct AboutSettingsView: View {
