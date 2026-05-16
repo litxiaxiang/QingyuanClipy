@@ -120,6 +120,32 @@ struct GeneralSettingsView: View {
                         }
                     }
                 }
+                
+                Divider()
+                
+                // 支持的格式说明
+                HStack(alignment: .top, spacing: 16) {
+                    Text("目前支持的内容：")
+                        .frame(width: 120, alignment: .trailing)
+                        .foregroundColor(.secondary)
+                        
+                    VStack(alignment: .leading, spacing: 6) {
+                        HStack {
+                            Image(systemName: "text.rectangle.fill")
+                                .foregroundColor(.primary)
+                            Text("纯文本")
+                        }
+                        HStack {
+                            Image(systemName: "photo")
+                                .foregroundColor(.primary)
+                            Text("图片（包括 PNG, TIFF）")
+                        }
+                        Text("暂不支持带有复杂格式的富文本及文件路径等内容。")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .padding(.top, 2)
+                    }
+                }
             }
             .padding(.top, 20)
             .padding(.horizontal, 10)
