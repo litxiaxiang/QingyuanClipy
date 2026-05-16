@@ -4,7 +4,9 @@
 
 # 青元 Clipy
 
-**青元 Clipy** 是一款为 macOS 设计的轻量级剪贴板管理工具。它能够隐式地记录你的剪贴板历史，并通过快捷键快速唤出弹窗进行查看和极速粘贴。
+​        **青元 Clipy** 是一款为 macOS 设计的轻量级剪贴板管理工具。它能够隐式地记录你的剪贴板历史，并通过快捷键快速唤出弹窗进行查看和极速粘贴。
+
+
 
 ## ✨ 特性 (Features)
 
@@ -13,6 +15,20 @@
 - **弹窗交互**: 原生且快速的 macOS 浮窗交互体验 (基于 SwiftUI)。
 - **快捷粘贴**: 选择历史记录后可快速在当前焦点应用中执行粘贴操作。
 - **配置与设置**: 提供简单易用的设置界面。
+
+
+
+## 📷 预览 (Preview)
+
+<p align="center">
+  <img src="Icon/Screenshot.png" width="200" alt="QingyuanClipy Logo">
+</p>
+
+<p align="center">
+  <img src="Icon/Screenshot_2.png" width="200" alt="QingyuanClipy Logo">
+</p>
+
+
 
 ## 🚀 安装 (Installation)
 
