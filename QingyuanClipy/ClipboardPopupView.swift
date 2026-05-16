@@ -9,21 +9,50 @@ struct ClipboardPopupView: View {
     // 把“选中某个 item”的回调暴露给外部，解耦粘贴逻辑
     var onSelect: ((ClipItem) -> Void)?
     
+    @State private var hoveredItemID: PersistentIdentifier?
     @State private var showAllItems: Bool = false
     
     var body: some View {
         VStack(spacing: 0) {
+            // 顶部搜索/标题栏区域 (Raycast 风格)
+            HStack(spacing: 12) {
+                Image(systemName: "magnifyingglass")
+                    .font(.system(size: 18, weight: .medium))
+                    .foregroundColor(.secondary)
+                
+                Text("剪贴板历史")
+                    .font(.system(size: 18, weight: .regular))
+                    .foregroundColor(.secondary)
+                
+                Spacer()
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 16)
+            
+            Rectangle()
+                .fill(Color.primary.opacity(0.1))
+                .frame(height: 1)
+            
             if items.isEmpty {
+                Spacer()
                 Text("剪贴板为空")
                     .foregroundColor(.secondary)
-                    .padding()
+                    .font(.system(size: 14))
+                Spacer()
             } else {
                 ScrollView {
-                    LazyVStack(spacing: 4) {
+                    LazyVStack(spacing: 2) {
                         let displayItems = showAllItems ? Array(items) : Array(items.prefix(5))
                         
                         ForEach(displayItems) { item in
                             popupItemCard(for: item)
+                                .onHover { isHovered in
+                                    if isHovered {
+                                        hoveredItemID = item.id
+                                    } else if hoveredItemID == item.id {
+                                        hoveredItemID = nil
+                                    }
+                                }
                                 .onTapGesture {
                                     onSelect?(item)
                                 }
@@ -33,43 +62,61 @@ struct ClipboardPopupView: View {
                             HStack {
                                 Spacer()
                                 Text("更多...")
-                                    .font(.subheadline)
-                                    .foregroundColor(.blue)
+                                    .font(.system(size: 13, weight: .regular))
+                                    .foregroundColor(.secondary)
                                 Spacer()
                             }
                             .padding(.vertical, 8)
                             .contentShape(Rectangle())
+                            .onHover { isHovered in
+                                if isHovered {
+                                    NSCursor.pointingHand.push()
+                                } else {
+                                    NSCursor.pop()
+                                }
+                            }
                             .onTapGesture {
-                                // 点击“更多”时，通过动画展开余下的所有项目
                                 withAnimation(.easeInOut(duration: 0.2)) {
                                     showAllItems = true
                                 }
                             }
                         }
                     }
-                    .padding(8)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 6)
                 }
             }
             
-            Divider()
+            Rectangle()
+                .fill(Color.primary.opacity(0.1))
+                .frame(height: 1)
             
             // 底部操作区
             HStack {
                 Text("共 \(items.count) 条记录")
-                    .font(.caption)
+                    .font(.system(size: 11, weight: .medium))
                     .foregroundColor(.secondary)
                 Spacer()
-                Button("清空") {
+                Button(action: {
                     clearAll()
+                }) {
+                    Text("清空列表")
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundColor(.red.opacity(0.8))
                 }
                 .buttonStyle(.plain)
-                .font(.caption)
-                .foregroundColor(.red)
             }
-            .padding(10)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 10)
+            .background(Color.black.opacity(0.03))
         }
+        .background(VisualEffectView().ignoresSafeArea())
+        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .stroke(Color.primary.opacity(0.05), lineWidth: 1)
+        )
         .onAppear {
-            // 每次弹窗重新出现时，重置折叠状态
             showAllItems = false
         }
     }
@@ -77,36 +124,66 @@ struct ClipboardPopupView: View {
     // 列表项卡片
     @ViewBuilder
     private func popupItemCard(for item: ClipItem) -> some View {
-        HStack {
+        let isHovered = (hoveredItemID == item.id)
+        
+        HStack(spacing: 8) {
+            // Icon 区域 (紧凑型)
+            if item.itemType == "text" {
+                Image(systemName: "text.alignleft")
+                    .font(.system(size: 13, weight: .regular))
+                    .foregroundColor(isHovered ? .primary : .secondary)
+                    .frame(width: 16)
+            } else if item.itemType == "image" {
+                Image(systemName: "photo.fill")
+                    .font(.system(size: 13, weight: .regular))
+                    .foregroundColor(isHovered ? .primary : .secondary)
+                    .frame(width: 16)
+            } else {
+                Image(systemName: "doc.fill")
+                    .font(.system(size: 13, weight: .regular))
+                    .foregroundColor(isHovered ? .primary : .secondary)
+                    .frame(width: 16)
+            }
+            
+            // 文本信息区域 - 移除时间，单行显示
             if item.itemType == "text", let text = item.textContent {
-                Image(systemName: "text.rectangle.fill")
-                    .foregroundColor(.blue)
                 Text(getSingleLinePreview(for: text))
+                    .font(.system(size: 13, weight: .regular))
+                    .foregroundColor(.primary)
                     .lineLimit(1)
-                    .foregroundColor(.primary)
-                Spacer()
             } else if item.itemType == "image", let imgData = item.imageData {
-                Image(systemName: "photo")
-                    .foregroundColor(.purple)
                 Text("图片 [\(imgData.count / 1024) KB]")
+                    .font(.system(size: 13, weight: .regular))
                     .foregroundColor(.primary)
-                Spacer()
-                if let nsImage = NSImage(data: imgData) {
-                    Image(nsImage: nsImage)
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .frame(width: 30, height: 30)
-                        .cornerRadius(4)
-                }
             } else {
                 Text("未知内容")
+                    .font(.system(size: 13, weight: .regular))
+                    .foregroundColor(.primary)
+            }
+            
+            Spacer(minLength: 0)
+            
+            // 图像预览缩略图 (缩小)
+            if item.itemType == "image", let imgData = item.imageData, let nsImage = NSImage(data: imgData) {
+                Image(nsImage: nsImage)
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(width: 20, height: 20)
+                    .clipShape(RoundedRectangle(cornerRadius: 3))
+            }
+            
+            // 悬停提示 (极简回车符)
+            if isHovered {
+                Image(systemName: "return")
+                    .font(.system(size: 10, weight: .bold))
+                    .foregroundColor(.secondary)
             }
         }
-        .padding(8)
-        .background(Color.secondary.opacity(0.1)) // 悬浮效果可用 hover 等扩展实现
-        .cornerRadius(6)
-        // 增加 contentShape 提供整行点击响应范围
-        .contentShape(Rectangle()) 
+        .padding(.horizontal, 8)
+        .padding(.vertical, 5) // 高度显著收紧
+        .background(isHovered ? Color.primary.opacity(0.1) : Color.clear) // 悬停整行底色，类似原生菜单
+        .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
+        .contentShape(Rectangle())
     }
     
     private func getSingleLinePreview(for text: String) -> String {
@@ -121,4 +198,17 @@ struct ClipboardPopupView: View {
             modelContext.delete(item)
         }
     }
+}
+
+// macOS 原生磨砂玻璃材质
+struct VisualEffectView: NSViewRepresentable {
+    func makeNSView(context: Context) -> NSVisualEffectView {
+        let view = NSVisualEffectView()
+        view.blendingMode = .behindWindow // 允许透视背景窗口
+        view.state = .active
+        view.material = .popover // Popover 材质最接近 Spotlight 和 Raycast
+        return view
+    }
+    
+    func updateNSView(_ nsView: NSVisualEffectView, context: Context) {}
 }

@@ -22,23 +22,52 @@ class PopupManager {
             }
             
             let wrappedView = rootView
-                .frame(width: 300, height: 260) // 只需要展示 5 行和底部操作栏，降低默认高度
+                .frame(width: 320, height: 280) // 适应最近 5 条的合适高度
                 .modelContainer(container)
             
             window = ClipboardPopupWindow(rootView: wrappedView)
-            window?.onHide = { 
-                // 可以在这里处理清理状态
-                // 比如 window = nil (如需每次重新创建)
+            window?.onHide = { [weak self] in
+                // 窗口隐藏后将其销毁，下次打开重新创建，确保 SwiftUI 的 @State（如展开状态）自然重置
+                self?.window = nil
             }
         }
         
-        // 获取当前鼠标指针的位置
-        let mouseLocation = NSEvent.mouseLocation
-        
         if let win = window {
-            // 将窗口弹出的位置设置在鼠标当前位置的右下方一点点
-            let targetPoint = NSPoint(x: mouseLocation.x, y: mouseLocation.y)
-            win.setFrameTopLeftPoint(targetPoint)
+            // 获取当前鼠标指针的位置
+            let mouseLocation = NSEvent.mouseLocation
+            
+            // 获取鼠标所在的屏幕
+            let screen = NSScreen.screens.first { $0.frame.contains(mouseLocation) } ?? NSScreen.main
+            
+            if let screen = screen {
+                let screenVisibleFrame = screen.visibleFrame
+                let windowWidth = win.frame.width
+                let windowHeight = win.frame.height
+                
+                // 默认将窗口弹出的位置设置在鼠标右下方
+                var topLeftX = mouseLocation.x + 2
+                var topLeftY = mouseLocation.y - 2
+                
+                // 边界碰撞检测与修正 (macOS 坐标系原点在左下角)
+                // 1. 如果右侧超出屏幕可视边缘
+                if topLeftX + windowWidth > screenVisibleFrame.maxX {
+                    topLeftX = screenVisibleFrame.maxX - windowWidth - 5
+                }
+                
+                // 2. 如果底部超出屏幕可视边缘 (注意 topLeftY - windowHeight 就是底部的高度)
+                if topLeftY - windowHeight < screenVisibleFrame.minY {
+                    topLeftY = screenVisibleFrame.minY + windowHeight + 5
+                }
+                
+                // 3. 兜底保护，确保不超过左边和上边
+                topLeftX = max(topLeftX, screenVisibleFrame.minX + 5)
+                topLeftY = min(topLeftY, screenVisibleFrame.maxY - 5)
+                
+                win.setFrameTopLeftPoint(NSPoint(x: topLeftX, y: topLeftY))
+            } else {
+                // 如果找不到屏幕，作为兜底居中
+                win.center()
+            }
             
             // 使得本应用成为活动状态（获得键盘焦点），并前置窗口
             NSApp.activate(ignoringOtherApps: true)

@@ -7,7 +7,7 @@ class ClipboardPopupWindow: NSPanel {
     var onHide: (() -> Void)?
     
     init(rootView: some View) {
-        let contentRect = NSRect(x: 0, y: 0, width: 300, height: 260)
+        let contentRect = NSRect(x: 0, y: 0, width: 320, height: 280)
         
         super.init(
             contentRect: contentRect,
@@ -18,7 +18,7 @@ class ClipboardPopupWindow: NSPanel {
         
         self.isFloatingPanel = true
         self.level = .popUpMenu
-        self.backgroundColor = NSColor.windowBackgroundColor.withAlphaComponent(0.95)
+        self.backgroundColor = .clear
         self.isOpaque = false
         self.hasShadow = true
         self.hidesOnDeactivate = false // 禁用系统的该行为，我们通过自管事件做彻底关闭
