@@ -7,7 +7,12 @@ class PopupManager {
     
     private var window: ClipboardPopupWindow?
     
-    func showPopup(with container: ModelContainer) {
+    func togglePopup(with container: ModelContainer) {
+        if let win = window, win.isVisible {
+            hidePopup()
+            return
+        }
+
         if window == nil {
             var rootView = ClipboardPopupView()
             
@@ -17,7 +22,7 @@ class PopupManager {
             }
             
             let wrappedView = rootView
-                .frame(width: 300, height: 400) // 根据滚动列表给定尺寸
+                .frame(width: 300, height: 260) // 只需要展示 5 行和底部操作栏，降低默认高度
                 .modelContainer(container)
             
             window = ClipboardPopupWindow(rootView: wrappedView)

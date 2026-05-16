@@ -9,6 +9,8 @@ struct ClipboardPopupView: View {
     // 把“选中某个 item”的回调暴露给外部，解耦粘贴逻辑
     var onSelect: ((ClipItem) -> Void)?
     
+    @State private var showAllItems: Bool = false
+    
     var body: some View {
         VStack(spacing: 0) {
             if items.isEmpty {
@@ -18,11 +20,31 @@ struct ClipboardPopupView: View {
             } else {
                 ScrollView {
                     LazyVStack(spacing: 4) {
-                        ForEach(items) { item in
+                        let displayItems = showAllItems ? Array(items) : Array(items.prefix(5))
+                        
+                        ForEach(displayItems) { item in
                             popupItemCard(for: item)
                                 .onTapGesture {
                                     onSelect?(item)
                                 }
+                        }
+                        
+                        if !showAllItems && items.count > 5 {
+                            HStack {
+                                Spacer()
+                                Text("更多...")
+                                    .font(.subheadline)
+                                    .foregroundColor(.blue)
+                                Spacer()
+                            }
+                            .padding(.vertical, 8)
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                // 点击“更多”时，通过动画展开余下的所有项目
+                                withAnimation(.easeInOut(duration: 0.2)) {
+                                    showAllItems = true
+                                }
+                            }
                         }
                     }
                     .padding(8)
@@ -45,6 +67,10 @@ struct ClipboardPopupView: View {
                 .foregroundColor(.red)
             }
             .padding(10)
+        }
+        .onAppear {
+            // 每次弹窗重新出现时，重置折叠状态
+            showAllItems = false
         }
     }
     

@@ -45,7 +45,7 @@ struct GeneralSettingsView: View {
     
     // 预设的状态栏图标选项
     private let availableIcons = [
-        ("回形针 (默认)", "paperclip"),
+        ("回形针", "paperclip"),
         ("剪切板", "doc.on.clipboard"),
         ("剪刀", "scissors"),
         ("列表", "list.clipboard"),

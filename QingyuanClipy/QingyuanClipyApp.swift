@@ -37,8 +37,8 @@ struct QingyuanClipyApp: App {
     
     private func setupGlobalHotKey() {
         GlobalHotKey.shared.action = { [self] in
-            // 按下热键时，在当前鼠标位置弹出剪贴板浮窗
-            PopupManager.shared.showPopup(with: sharedModelContainer)
+            // 按下热键时，在当前鼠标位置切换弹出剪贴板浮窗
+            PopupManager.shared.togglePopup(with: sharedModelContainer)
         }
         
         // 读取快捷键开关设置，默认开启
