@@ -39,7 +39,7 @@
 ## 🚀 安装 (Installation)
 
 ### 下载最新版本 (推荐)
-1. 前往项目的 [Releases 页面](https://github.com/Haodong-LL/QingyuanClipy/releases) 下载最新版本的 `.dmg` 文件。
+1. 前往项目的 [Releases 页面](https://github.com/litxiaxiang/QingyuanClipy/releases) 下载最新版本的 `.dmg` 文件。
 2. 双击打开下载的 `.dmg` 文件。
 3. 将 **青元 Clipy** 图标拖拽到右侧的 `Applications (应用程序)` 文件夹中即可完成安装。
 
