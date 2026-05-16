@@ -30,23 +30,28 @@
 
 
 
+## ⚙️ 系统要求 (System Requirements)
+
+- **macOS 26.0** 或更高版本。
+
+
+
 ## 🚀 安装 (Installation)
 
-### 从源码编译
+### 下载最新版本 (推荐)
+1. 前往项目的 [Releases 页面](https://github.com/Haodong-LL/QingyuanClipy/releases) 下载最新版本的 `.dmg` 文件。
+2. 双击打开下载的 `.dmg` 文件。
+3. 将 **青元 Clipy** 图标拖拽到右侧的 `Applications (应用程序)` 文件夹中即可完成安装。
 
-1. 确保你的 Mac 上已经安装了最新版本的 [Xcode](https://developer.apple.com/xcode/)。
-2. 克隆本仓库到本地：
-   ```bash
-   git clone https://github.com/YourUsername/QingyuanClipy.git
-   ```
-3. 在 Xcode 中打开 `QingyuanClipy.xcodeproj`。
-4. 选择你的 Mac 作为编译目标，点击 **Run (Cmd + R)** 即可编译并运行。
+
 
 ## ⚙️ 权限设置
 
 为了使 QingyuanClipy 能够正常监听并在其他应用中自动执行粘贴操作，请确保赋予其**辅助功能 (Accessibility)** 权限：
 1. 打开 macOS 的 **系统设置 > 隐私与安全性 > 辅助功能**。
 2. 找到 QingyuanClipy 并将其开关打开（如未找到可点击 "+" 手动添加应用）。
+
+
 
 ## 🤝 贡献 (Contributing)
 
@@ -56,6 +61,8 @@
 3. 提交你的更改 (`git commit -m 'Add some AmazingFeature'`)
 4. 推送到分支 (`git push origin feature/AmazingFeature`)
 5. 开启一个 Pull Request
+
+
 
 ## 📄 许可证 (License)
 
