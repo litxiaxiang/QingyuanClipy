@@ -4,6 +4,7 @@ import SwiftData
 struct ClipboardMenuView: View {
     // 获取最近复制的 10 条剪贴板内容，按时间倒序排列
     @Query(sort: \ClipItem.timestamp, order: .reverse) private var items: [ClipItem]
+    @AppStorage("maxHistoryCount") private var maxHistoryCount: Int = 50
     
     var body: some View {
         if items.isEmpty {
@@ -17,8 +18,9 @@ struct ClipboardMenuView: View {
             // 第 11 条开始放在二级菜单里
             if items.count > 10 {
                 Menu {
-                    // 二级菜单再展示最多 40 条旧记录
-                    ForEach(items.dropFirst(10).prefix(40)) { item in
+                    // 二级菜单再展示剩余的记录
+                    let remainingCount = max(0, maxHistoryCount - 10)
+                    ForEach(items.dropFirst(10).prefix(remainingCount)) { item in
                         menuItem(for: item)
                     }
                 } label: {

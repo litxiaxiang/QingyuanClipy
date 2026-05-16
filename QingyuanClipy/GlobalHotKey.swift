@@ -6,18 +6,24 @@ class GlobalHotKey {
     var action: (() -> Void)?
 
     private var hotKeyRef: EventHotKeyRef?
+    private var isHandlerInstalled = false
 
     func registerCmdShiftV() {
-        // 注册键盘事件拦截回调
-        var eventType = EventTypeSpec(eventClass: OSType(kEventClassKeyboard), eventKind: UInt32(kEventHotKeyPressed))
-        
-        InstallEventHandler(GetApplicationEventTarget(), { (nextHandler, theEvent, userData) -> OSStatus in
-            // 当按下触发时，回到主线程执行动作
-            DispatchQueue.main.async {
-                GlobalHotKey.shared.action?()
-            }
-            return noErr
-        }, 1, &eventType, nil, nil)
+        if hotKeyRef != nil { return } // 已经注册过了
+
+        // 只安装一次事件处理回调
+        if !isHandlerInstalled {
+            var eventType = EventTypeSpec(eventClass: OSType(kEventClassKeyboard), eventKind: UInt32(kEventHotKeyPressed))
+            
+            InstallEventHandler(GetApplicationEventTarget(), { (nextHandler, theEvent, userData) -> OSStatus in
+                // 当按下触发时，回到主线程执行动作
+                DispatchQueue.main.async {
+                    GlobalHotKey.shared.action?()
+                }
+                return noErr
+            }, 1, &eventType, nil, nil)
+            isHandlerInstalled = true
+        }
         
         // 0x09 对应的 keyCode 是按键 'V'
         let keyCode = UInt32(0x09)
@@ -30,5 +36,12 @@ class GlobalHotKey {
         
         // 注册热键
         RegisterEventHotKey(keyCode, modifiers, hotKeyID, GetApplicationEventTarget(), 0, &hotKeyRef)
+    }
+    
+    func unregister() {
+        if let ref = hotKeyRef {
+            UnregisterEventHotKey(ref)
+            hotKeyRef = nil
+        }
     }
 }
