@@ -8,8 +8,19 @@
 import SwiftUI
 import SwiftData
 
+class AppDelegate: NSObject, NSApplicationDelegate {
+    func applicationDidFinishLaunching(_ notification: Notification) {
+        // 检查辅助功能权限，如果没有则弹窗引导
+        if !AccessibilityManager.shared.isTrusted {
+            PermissionGuideWindowController.shared.showWindow()
+        }
+    }
+}
+
 @main
 struct QingyuanClipyApp: App {
+    @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+    
     // 监听器实例
     let monitor = ClipboardMonitor()
 
